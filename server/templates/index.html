@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Supervisión — Puente MQTT ESP32</title>
+  <meta name="description" content="Supervisión en tiempo real de comunicación bidireccional entre dos placas ESP32 mediante broker MQTT sin base de datos.">
+  
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- ENCABEZADO PRINCIPAL -->
+    <header class="main-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Puente MQTT ESP32</h1>
+          <p class="brand-subtitle">Supervisión bidireccional en tiempo real &bull; En memoria RAM</p>
+        </div>
+      </div>
+
+      <div class="system-status-pills">
+        <div class="status-pill" id="broker-pill">
+          <span class="pill-dot"></span>
+          <span class="pill-label">Broker MQTT:</span>
+          <span class="pill-val" id="broker-status-val">Conectando...</span>
+        </div>
+        <div class="status-pill" id="stream-pill">
+          <span class="pill-dot"></span>
+          <span class="pill-label">Canal Web:</span>
+          <span class="pill-val" id="stream-status-val">En vivo (SSE)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- GRID DE DISPOSITIVOS ESP32 A Y B -->
+    <main class="devices-grid">
+
+      <!-- TARJETA: ESP32 A -->
+      <section class="device-card" id="card-esp32-a">
+        <div class="card-header">
+          <div class="device-meta">
+            <span class="device-badge badge-a">ESP32 A</span>
+            <span class="device-chip-info">30 Pines &bull; NodeMCU ESP-WROOM-32</span>
+          </div>
+          <div class="connection-status" id="status-a">
+            <span class="status-indicator offline"></span>
+            <span class="status-text">Desconectado</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="telemetry-bar">
+            <span class="telemetry-item">
+              <span class="telemetry-lbl">Última actividad:</span>
+              <span class="telemetry-val" id="last-seen-a">Sin datos</span>
+            </span>
+            <span class="telemetry-item">
+              <span class="telemetry-lbl">Tópico Tx:</span>
+              <code class="topic-code">lab/esp32/A/state</code>
+            </span>
+          </div>
+
+          <!-- BLOQUE LEDS LOCALES -->
+          <div class="channel-group">
+            <div class="group-header">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                </svg>
+                LEDs Locales (Controlados por Pulsadores de A)
+              </h3>
+              <span class="group-subtext">Pulsador 1 (GPIO 32) &bull; Pulsador 2 (GPIO 33)</span>
+            </div>
+
+            <div class="led-grid">
+              <!-- LED LOCAL 1 -->
+              <div class="led-cell" id="cell-a-local-1">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp" id="led-lamp-a-local-1"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 1 Local</span>
+                    <span class="led-tag off" id="tag-a-local-1">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 18 &bull; Físico</span>
+                </div>
+              </div>
+
+              <!-- LED LOCAL 2 -->
+              <div class="led-cell" id="cell-a-local-2">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp" id="led-lamp-a-local-2"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 2 Local</span>
+                    <span class="led-tag off" id="tag-a-local-2">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 19 &bull; Físico</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLOQUE LEDS RECEPTORES (REMOTOS DE B) -->
+          <div class="channel-group receptor-group">
+            <div class="group-header">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                LEDs Receptores (Reflejan canales de ESP32 B)
+              </h3>
+              <span class="group-subtext">Suscrito a: lab/esp32/B/state</span>
+            </div>
+
+            <div class="led-grid">
+              <!-- LED RECEPTOR 1 -->
+              <div class="led-cell" id="cell-a-remote-1">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp remote-lamp" id="led-lamp-a-remote-1"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 1 Remoto</span>
+                    <span class="led-tag off" id="tag-a-remote-1">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 21 &bull; Recibido de B</span>
+                </div>
+              </div>
+
+              <!-- LED RECEPTOR 2 -->
+              <div class="led-cell" id="cell-a-remote-2">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp remote-lamp" id="led-lamp-a-remote-2"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 2 Remoto</span>
+                    <span class="led-tag off" id="tag-a-remote-2">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 22 &bull; Recibido de B</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TARJETA: ESP32 B -->
+      <section class="device-card" id="card-esp32-b">
+        <div class="card-header">
+          <div class="device-meta">
+            <span class="device-badge badge-b">ESP32 B</span>
+            <span class="device-chip-info">38 Pines &bull; ESP32-WROOM-32D/U</span>
+          </div>
+          <div class="connection-status" id="status-b">
+            <span class="status-indicator offline"></span>
+            <span class="status-text">Desconectado</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="telemetry-bar">
+            <span class="telemetry-item">
+              <span class="telemetry-lbl">Última actividad:</span>
+              <span class="telemetry-val" id="last-seen-b">Sin datos</span>
+            </span>
+            <span class="telemetry-item">
+              <span class="telemetry-lbl">Tópico Tx:</span>
+              <code class="topic-code">lab/esp32/B/state</code>
+            </span>
+          </div>
+
+          <!-- BLOQUE LEDS LOCALES -->
+          <div class="channel-group">
+            <div class="group-header">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                </svg>
+                LEDs Locales (Controlados por Pulsadores de B)
+              </h3>
+              <span class="group-subtext">Pulsador 1 (GPIO 32) &bull; Pulsador 2 (GPIO 33)</span>
+            </div>
+
+            <div class="led-grid">
+              <!-- LED LOCAL 1 -->
+              <div class="led-cell" id="cell-b-local-1">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp" id="led-lamp-b-local-1"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 1 Local</span>
+                    <span class="led-tag off" id="tag-b-local-1">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 18 &bull; Físico</span>
+                </div>
+              </div>
+
+              <!-- LED LOCAL 2 -->
+              <div class="led-cell" id="cell-b-local-2">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp" id="led-lamp-b-local-2"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 2 Local</span>
+                    <span class="led-tag off" id="tag-b-local-2">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 19 &bull; Físico</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLOQUE LEDS RECEPTORES (REMOTOS DE A) -->
+          <div class="channel-group receptor-group">
+            <div class="group-header">
+              <h3 class="group-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                LEDs Receptores (Reflejan canales de ESP32 A)
+              </h3>
+              <span class="group-subtext">Suscrito a: lab/esp32/A/state</span>
+            </div>
+
+            <div class="led-grid">
+              <!-- LED RECEPTOR 1 -->
+              <div class="led-cell" id="cell-b-remote-1">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp remote-lamp" id="led-lamp-b-remote-1"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 1 Remoto</span>
+                    <span class="led-tag off" id="tag-b-remote-1">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 21 &bull; Recibido de A</span>
+                </div>
+              </div>
+
+              <!-- LED RECEPTOR 2 -->
+              <div class="led-cell" id="cell-b-remote-2">
+                <div class="led-visual-wrap">
+                  <div class="led-lamp remote-lamp" id="led-lamp-b-remote-2"></div>
+                </div>
+                <div class="led-details">
+                  <div class="led-title-row">
+                    <span class="led-name">Canal 2 Remoto</span>
+                    <span class="led-tag off" id="tag-b-remote-2">OFF</span>
+                  </div>
+                  <span class="led-gpio">GPIO 22 &bull; Recibido de A</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- SECCIÓN INFERIOR: HISTORIAL DE EVENTOS Y GUÍA RÁPIDA -->
+    <div class="lower-grid">
+
+      <!-- CONSOLA DE EVENTOS EN VIVO -->
+      <section class="events-card">
+        <div class="events-header">
+          <div class="events-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h2>Registro de Eventos en Tiempo Real (RAM)</h2>
+          </div>
+          <button class="btn-clear" id="btn-clear-events" title="Limpiar eventos de la pantalla">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Limpiar registro
+          </button>
+        </div>
+
+        <div class="events-log-container" id="events-log">
+          <div class="events-empty">Esperando mensajes desde el broker MQTT...</div>
+        </div>
+      </section>
+
+      <!-- REFERENCIA RÁPIDA DE HARDWARE -->
+      <section class="info-card">
+        <h2 class="info-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          Mapeo de Pines y Comportamiento
+        </h2>
+
+        <div class="pinout-table-wrap">
+          <table class="pinout-table">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>GPIO</th>
+                <th>Tipo</th>
+                <th>Conexión</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pulsador 1</td>
+                <td><span class="pin-badge">GPIO 32</span></td>
+                <td>Entrada</td>
+                <td>INPUT_PULLUP a GND</td>
+              </tr>
+              <tr>
+                <td>Pulsador 2</td>
+                <td><span class="pin-badge">GPIO 33</span></td>
+                <td>Entrada</td>
+                <td>INPUT_PULLUP a GND</td>
+              </tr>
+              <tr>
+                <td>LED Local 1</td>
+                <td><span class="pin-badge">GPIO 18</span></td>
+                <td>Salida</td>
+                <td>Resistencia 220Ω a GND</td>
+              </tr>
+              <tr>
+                <td>LED Local 2</td>
+                <td><span class="pin-badge">GPIO 19</span></td>
+                <td>Salida</td>
+                <td>Resistencia 220Ω a GND</td>
+              </tr>
+              <tr>
+                <td>LED Remoto 1</td>
+                <td><span class="pin-badge">GPIO 21</span></td>
+                <td>Salida</td>
+                <td>Resistencia 220Ω a GND</td>
+              </tr>
+              <tr>
+                <td>LED Remoto 2</td>
+                <td><span class="pin-badge">GPIO 22</span></td>
+                <td>Salida</td>
+                <td>Resistencia 220Ω a GND</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="arch-notes">
+          <p><strong>Sin Base de Datos:</strong> El broker retransmite mensajes de manera independiente. Si se cierra el navegador, las placas se siguen comunicando sin interrupción.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="main-footer">
+      <span>Sistema Bidireccional IoT &bull; Arquitectura desacoplada MQTT + Servidor Web</span>
+      <span>Mosquitto + Python/Flask + ESP32</span>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

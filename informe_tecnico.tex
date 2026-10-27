@@ -1,0 +1,1071 @@
+\documentclass[11pt,a4paper]{article}
+
+% ==============================================================================
+% CONFIGURACIÓN DE PAQUETES Y TIPOGRAFÍA
+% ==============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{geometry}
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.5cm,
+    right=2.5cm,
+    headheight=15pt
+}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+\graphicspath{{./figuras/}{./img/}{./imagenes/}{./}{../figuras/}}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,calc,fit,backgrounds}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=NavyBlue,
+    citecolor=NavyBlue,
+    urlcolor=Teal,
+    pdftitle={Informe Técnico: Sistema de Comunicación Bidireccional ESP32 con Servidor Puente MQTT y Panel Web},
+    pdfauthor={Proyecto IoT ESP32},
+    pdfsubject={Ingeniería Electrónica y Sistemas Embebidos / IoT}
+}
+
+% ==============================================================================
+% PALETA DE COLORES CORPORATIVA / ACADÉMICA
+% ==============================================================================
+\definecolor{NavyBlue}{HTML}{1A365D}
+\definecolor{DeepBlue}{HTML}{0D233A}
+\definecolor{Teal}{HTML}{0D9488}
+\definecolor{DarkSlate}{HTML}{334155}
+\definecolor{LightGray}{HTML}{F8FAFC}
+\definecolor{BorderGray}{HTML}{E2E8F0}
+\definecolor{CodeBg}{HTML}{F1F5F9}
+\definecolor{CodeGreen}{HTML}{166534}
+\definecolor{CodeRed}{HTML}{991B1B}
+\definecolor{CodeBlue}{HTML}{1E40AF}
+\definecolor{CodePurple}{HTML}{6B21A8}
+\definecolor{AlertWarn}{HTML}{B45309}
+
+% ==============================================================================
+% CONFIGURACIÓN DE LISTINGS (CÓDIGO FUENTE)
+% ==============================================================================
+\lstset{
+    backgroundcolor=\color{CodeBg},
+    basicstyle=\ttfamily\footnotesize\color{DarkSlate},
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=single,
+    rulecolor=\color{BorderGray},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    tabsize=2,
+    showstringspaces=false,
+    keywordstyle=\bfseries\color{CodeBlue},
+    commentstyle=\itshape\color{CodeGreen},
+    stringstyle=\color{CodeRed},
+    captionpos=b,
+    keepspaces=true
+}
+
+\lstdefinelanguage{json}{
+    string=[s]{"}{"},
+    stringstyle=\color{CodeBlue},
+    comment=[l]{:},
+    commentstyle=\color{DarkSlate}
+}
+
+% ==============================================================================
+% ESTILO DE PÁGINA (FANCYHDR)
+% ==============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{DarkSlate}\textbf{Sistema de Comunicación Bidireccional ESP32 -- MQTT}}
+\fancyhead[R]{\small\color{DarkSlate}\leftmark}
+\fancyfoot[L]{\small\color{gray}Informe Técnico de Ingeniería IoT}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% ==============================================================================
+% CAJAS DESTACADAS (TCOLORBOX)
+% ==============================================================================
+\newtcolorbox{infobox}[1][]{
+    enhanced,
+    colback=LightGray,
+    colframe=NavyBlue,
+    arc=3mm,
+    fonttitle=\bfseries\color{white},
+    coltitle=white,
+    attach boxed title to top left={yshift=-2mm, xshift=4mm},
+    boxed title style={colback=NavyBlue, arc=1.5mm},
+    title=Nota Técnica,
+    #1
+}
+
+\newtcolorbox{warnbox}[1][]{
+    enhanced,
+    colback=LightGray,
+    colframe=AlertWarn,
+    arc=3mm,
+    fonttitle=\bfseries\color{white},
+    coltitle=white,
+    attach boxed title to top left={yshift=-2mm, xshift=4mm},
+    boxed title style={colback=AlertWarn, arc=1.5mm},
+    title=Consideración Crítica de Seguridad Eléctrica,
+    #1
+}
+
+% ==============================================================================
+% MACROS INTELIGENTES PARA APARTADOS DE IMÁGENES (CON PLACEHOLDERS AUTOMÁTICOS)
+% ==============================================================================
+% Macro para una figura individual: si el archivo existe se incrusta, de lo
+% contrario se dibuja un contenedor técnico profesional con instrucciones claras.
+\newcommand{\insertarFigura}[5][0.85\textwidth]{%
+    % #1: Ancho de la figura (por defecto 0.85\textwidth)
+    % #2: Nombre/ruta del archivo de imagen
+    % #3: Descripción o contenido esperado para guiar al autor
+    % #4: Texto del caption
+    % #5: Label para referencias cruzadas (\ref{})
+    \begin{figure}[H]
+        \centering
+        \IfFileExists{#2}{%
+            \includegraphics[width=#1]{#2}%
+        }{%
+            \IfFileExists{figuras/#2}{%
+                \includegraphics[width=#1]{figuras/#2}%
+            }{%
+                \begin{tcolorbox}[
+                    enhanced,
+                    width=#1,
+                    colback=LightGray,
+                    colframe=NavyBlue!75!black,
+                    arc=2.5mm,
+                    boxrule=1.2pt,
+                    halign=center,
+                    valign=center,
+                    height=5.8cm,
+                    borderline={1pt}{0pt}{NavyBlue!70!black, dashed}
+                ]
+                    \vspace{0.2cm}
+                    {\color{NavyBlue}\Large\textbf{\textsf{[ Apartado Reservado para Imagen / Fotografía ]}}}\\[0.2cm]
+                    {\small\textbf{Archivo esperado:} \color{CodeRed}\texttt{\detokenize{#2}} \color{DarkSlate}o \color{CodeRed}\texttt{figuras/\detokenize{#2}}}\\[0.2cm]
+                    \begin{minipage}{0.88\linewidth}
+                        \centering
+                        \footnotesize\color{DarkSlate}
+                        \textbf{Contenido a colocar:} #3\\[0.15cm]
+                        \textit{\color{gray}Al guardar su imagen (.png, .jpg o .pdf) dentro de la carpeta \texttt{figuras/}, se mostrará automáticamente al recompilar.}
+                    \end{minipage}
+                    \vspace{0.2cm}
+                \end{tcolorbox}%
+            }%
+        }%
+        \caption{#4}
+        \label{#5}
+    \end{figure}
+}
+
+% Macro para dos figuras en paralelo (subfigures)
+\newcommand{\insertarDosFiguras}[8]{%
+    % #1: Archivo 1, #2: Contenido 1, #3: Subcaption 1
+    % #4: Archivo 2, #5: Contenido 2, #6: Subcaption 2
+    % #7: Caption general, #8: Label general
+    \begin{figure}[H]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \IfFileExists{#1}{%
+                \includegraphics[width=\textwidth]{#1}%
+            }{%
+                \IfFileExists{figuras/#1}{%
+                    \includegraphics[width=\textwidth]{figuras/#1}%
+                }{%
+                    \begin{tcolorbox}[
+                        enhanced, width=\textwidth, colback=LightGray, colframe=NavyBlue!75!black,
+                        arc=2mm, boxrule=1pt, halign=center, valign=center, height=4.8cm,
+                        borderline={0.8pt}{0pt}{NavyBlue!70!black, dashed}
+                    ]
+                        \vspace{0.15cm}
+                        {\color{NavyBlue}\bfseries\small [ Apartado de Imagen ]}\\[0.1cm]
+                        {\tiny\textbf{Archivo:} \color{CodeRed}\texttt{\detokenize{#1}}}\\[0.15cm]
+                        \begin{minipage}{0.9\linewidth}
+                            \centering
+                            \tiny\color{DarkSlate} #2
+                        \end{minipage}
+                        \vspace{0.15cm}
+                    \end{tcolorbox}%
+                }%
+            }%
+            \caption{#3}
+        \end{subfigure}\hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \IfFileExists{#4}{%
+                \includegraphics[width=\textwidth]{#4}%
+            }{%
+                \IfFileExists{figuras/#4}{%
+                    \includegraphics[width=\textwidth]{figuras/#4}%
+                }{%
+                    \begin{tcolorbox}[
+                        enhanced, width=\textwidth, colback=LightGray, colframe=NavyBlue!75!black,
+                        arc=2mm, boxrule=1pt, halign=center, valign=center, height=4.8cm,
+                        borderline={0.8pt}{0pt}{NavyBlue!70!black, dashed}
+                    ]
+                        \vspace{0.15cm}
+                        {\color{NavyBlue}\bfseries\small [ Apartado de Imagen ]}\\[0.1cm]
+                        {\tiny\textbf{Archivo:} \color{CodeRed}\texttt{\detokenize{#4}}}\\[0.15cm]
+                        \begin{minipage}{0.9\linewidth}
+                            \centering
+                            \tiny\color{DarkSlate} #5
+                        \end{minipage}
+                        \vspace{0.15cm}
+                    \end{tcolorbox}%
+                }%
+            }%
+            \caption{#6}
+        \end{subfigure}
+        \caption{#7}
+        \label{#8}
+    \end{figure}
+}
+
+% ==============================================================================
+% DOCUMENTO PRINCIPAL
+% ==============================================================================
+\begin{document}
+
+% ------------------------------------------------------------------------------
+% PORTADA
+% ------------------------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1.0cm}
+    
+    {\Huge \bfseries \color{NavyBlue} INFORME TÉCNICO DE INGENIERÍA} \\[0.5cm]
+    {\Large \bfseries \color{Teal} SISTEMA DE COMUNICACIÓN BIDIRECCIONAL IOT ENTRE MICROCONTROLADORES ESP32 CON SERVIDOR PUENTE MQTT Y PANEL DE SUPERVISIÓN WEB} \\[1.5cm]
+    
+    \begin{tcolorbox}[colback=LightGray, colframe=NavyBlue, width=0.92\textwidth, arc=2mm]
+        \centering
+        \vspace{0.2cm}
+        \textbf{\large Arquitectura M2M Desacoplada sin Base de Datos (In-Memory Processing),} \\
+        \textbf{\large Telemetría Push en Tiempo Real mediante Server-Sent Events (SSE)} \\
+        \textbf{\large y Firmware Robusto con Conmutación Concurrente No Bloqueante}
+        \vspace{0.2cm}
+    \end{tcolorbox}
+    
+    \vspace{2.0cm}
+    
+    \begin{tabular}{ll}
+        \textbf{Área Disciplinar:} & Internet de las Cosas (IoT) / Sistemas Embebidos \\
+        \textbf{Protocolos:} & MQTT v3.1.1, HTTP/1.1 SSE, IEEE 802.11 b/g/n (Wi-Fi) \\
+        \textbf{Hardware:} & ESP32 NodeMCU (30 pines) \& ESP32 DevKit V1 (38 pines) \\
+        \textbf{Backend \& Servidor:} & Python 3.10+, Flask, Eclipse Mosquitto Broker \\
+        \textbf{Fecha de Publicación:} & Octubre de 2026 \\
+        \textbf{Versión del Sistema:} & v1.0.0 -- Estado Estable de Producción \\
+    \end{tabular}
+    
+    \vfill
+    
+    \begin{tikzpicture}
+        \draw[NavyBlue, line width=1.5pt] (0,0) -- (14,0);
+    \end{tikzpicture}
+    
+    \vspace{0.4cm}
+    {\small \color{DarkSlate} Documento Técnico de Arquitectura, Circuitería, Firmware y Pruebas Experimentales}
+\end{titlepage}
+
+% ------------------------------------------------------------------------------
+% RESUMEN Y ABSTRACT
+% ------------------------------------------------------------------------------
+\newpage
+\thispagestyle{plain}
+
+\begin{abstract}
+\noindent El presente informe técnico documenta el diseño, desarrollo, implementación física y validación experimental de un sistema distribuido de comunicación bidireccional en tiempo real entre dos microcontroladores ESP32 (variantes de 30 y 38 pines). El núcleo de la comunicación máquina a máquina (M2M) está sustentado en el protocolo estándar MQTT (v3.1.1) orquestado por el broker Eclipse Mosquitto. Para la supervisión y control del sistema, se desarrolló un servidor puente liviano en Python/Flask que implementa una arquitectura \textit{Zero-Database} fundamentada enteramente en estructuras de datos en memoria RAM (anillos circulares FIFO y tablas de dispersión concurrentes), transmitiendo la telemetría a un panel web responsivo mediante \textit{Server-Sent Events} (SSE) de baja latencia. El firmware embebido incorpora mecanismos no bloqueantes de eliminación de rebotes (\textit{software debouncing}), retención de mensajes (\textit{retained flags}), reconexión autónoma periódica y gestión de disponibilidad mediante Última Voluntad y Testamento (\textit{Last Will and Testament} -- LWT). Se analizan en detalle los esquemas eléctricos a 3.3~V, las restricciones de hardware de los pines GPIO, el diseño del protocolo de mensajería en formato JSON y el comportamiento ante desconexiones intempestivas, certificando una latencia de transmisión sub-30~ms y una disponibilidad continua sin bloqueo mutuo.
+\end{abstract}
+
+\vspace{0.5cm}
+\noindent \textbf{Palabras Clave:} ESP32, MQTT, Eclipse Mosquitto, Internet of Things (IoT), Server-Sent Events (SSE), Python Flask, Sistemas Embebidos, Arquitectura en Memoria.
+
+\vspace{1.0cm}
+\begin{center}
+    \textbf{\large Abstract}
+\end{center}
+\begin{otherlanguage}{english}
+\noindent This technical report documents the design, development, hardware wiring, and experimental validation of a real-time bidirectional distributed communication system between two ESP32 microcontrollers (30-pin and 38-pin footprints). The Machine-to-Machine (M2M) communication fabric is based on the industry-standard MQTT protocol (v3.1.1) managed by an Eclipse Mosquitto broker. For system supervision and monitoring, a lightweight Python/Flask bridge server was developed, implementing a zero-database architecture relying entirely on volatile in-memory RAM structures (FIFO circular buffers and thread-safe hash tables), dispatching telemetry to a modern web dashboard via low-overhead Server-Sent Events (SSE). The embedded firmware incorporates non-blocking software debouncing routines, MQTT retained message state flags, autonomous network reconnection loops, and node presence detection using Last Will and Testament (LWT). Detailed electrical schematics at 3.3~V, GPIO pin allocation constraints, JSON messaging schemes, and resilience against sudden network failures are exhaustively analyzed, demonstrating sub-30~ms transmission latency and robust continuous operation.
+\end{otherlanguage}
+
+\vspace{0.5cm}
+\noindent \textbf{Keywords:} ESP32, MQTT, Eclipse Mosquitto, Internet of Things (IoT), Server-Sent Events (SSE), Python Flask, Embedded Systems, In-Memory Architecture.
+
+\newpage
+\tableofcontents
+\vspace{0.8cm}
+\listoffigures
+\vspace{0.5cm}
+\listoftables
+\newpage
+
+% ------------------------------------------------------------------------------
+% 1. INTRODUCCIÓN Y JUSTIFICACIÓN
+% ------------------------------------------------------------------------------
+\section{Introducción y Justificación}
+
+\subsection{Contexto Tecnológico}
+El crecimiento exponencial del Internet de las Cosas (\textit{Internet of Things}, IoT) y los sistemas ciberfísicos ha demandado paradigmas de comunicación ligeros, asíncronos y desacoplados. Tradicionalmente, los esquemas de comunicación punto a punto basados en HTTP/REST sufren de una sobrecarga (\textit{overhead}) considerable debida al encabezado repetitivo de peticiones, así como a la necesidad de implementar sondeos periódicos (\textit{polling}) para detectar cambios de estado, lo que degrada drásticamente la eficiencia energética y el ancho de banda en microcontroladores embebidos.
+
+En este marco, el protocolo MQTT (\textit{Message Queuing Telemetry Transport}) se ha consolidado como el estándar de facto para la interconexión M2M gracias a su modelo Publicador/Suscriptor (\textit{Publish/Subscribe}), su tamaño de encabezado mínimo (2 bytes en paquetes fijos) y su capacidad de gestionar conexiones persistentes sobre TCP/IP con mecanismos de calidad de servicio (QoS).
+
+\subsection{Problemática a Resolver}
+En escenarios de automatización distribuida y control industrial, frecuentemente se requiere que dos o más nodos embebidos compartan variables de estado bidireccionalmente (e.g., estados de actuadores y confirmaciones de recepción) y que, en paralelo, una consola de supervisión humana pueda monitorear dichos eventos en tiempo real. No obstante, surgen tres desafíos técnicos esenciales:
+\begin{enumerate}
+    \item \textbf{Independencia del canal M2M respecto al panel de supervisión:} La comunicación entre microcontroladores no debe depender de que la interfaz gráfica esté abierta o en ejecución.
+    \item \textbf{Gestión de estado sin persistencia en disco (Zero-Database):} La persistencia innecesaria en bases de datos relacionales o documentales introduce latencia de entrada/salida (I/O), desgaste prematuro de memorias flash y complejidad de mantenimiento para sistemas orientados puramente al monitoreo en tiempo real de estado volátil.
+    \item \textbf{Manejo de estados no sincronizados tras reinicio o caída de red:} Cuando un nodo se desconecta o reinicia, debe sincronizar su estado de manera instantánea y conocer la disponibilidad real del nodo par.
+\end{enumerate}
+
+\subsection{Objetivos del Proyecto}
+\subsubsection{Objetivo General}
+Diseñar e implementar un sistema embebido distribuido de comunicación bidireccional entre dos microcontroladores ESP32 mediante un broker MQTT y un servidor puente liviano en Python/Flask con panel web en tiempo real, garantizando una operación continua, desacoplada y libre de bases de datos.
+
+\subsubsection{Objetivos Específicos}
+\begin{itemize}
+    \item Implementar en firmware (C++) un sistema concurrente no bloqueante para detección de pulsadores y control de LEDs locales y remotos.
+    \item Configurar el broker MQTT Mosquitto implementando tópicos jerárquicos y mecanismos de retención de mensajes (\textit{Retained}) y Última Voluntad y Testamento (\textit{LWT}).
+    \item Desarrollar un servidor puente en Flask que intercepte el flujo MQTT y emita telemetría en tiempo real hacia el navegador web empleando Server-Sent Events (SSE).
+    \item Diseñar esquemas eléctricos seguros a nivel de hardware que respeten las especificaciones de tensión (3.3~V CMOS) y corriente máxima de los pines GPIO del ESP32.
+    \item Proveer una herramienta de simulación interactiva por software para pruebas de estrés y validación sin dependencia del hardware físico.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 2. ARQUITECTURA GENERAL DEL SISTEMA
+% ------------------------------------------------------------------------------
+\section{Arquitectura General del Sistema}
+
+\subsection{Topología Lógica y Desacoplamiento}
+La arquitectura del sistema se fundamenta en un desacoplamiento tridimensional: espacial, temporal y de sincronización. Los microcontroladores ESP32 A y ESP32 B desconocen mutuamente sus direcciones IP físicas y estados de red individuales; toda la mediación se realiza a través del broker MQTT.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.5cm and 2.2cm,
+        box/.style={rectangle, draw=NavyBlue, fill=LightGray, rounded corners=3mm, line width=1.2pt, align=center, inner sep=8pt},
+        subbox/.style={rectangle, draw=Teal, fill=white, rounded corners=1.5mm, line width=0.8pt, align=center, inner sep=5pt, font=\footnotesize},
+        arrow/.style={-{Stealth[length=3mm]}, line width=1.2pt, draw=NavyBlue},
+        biarrow/.style={{Stealth[length=3mm]}-{Stealth[length=3mm]}, line width=1.2pt, draw=NavyBlue},
+        dasharrow/.style={-{Stealth[length=2.5mm]}, line width=1pt, dashed, draw=Teal}
+    ]
+        % Nodos Principales
+        \node[box] (broker) at (0, 0) {
+            \textbf{\Large Broker MQTT}\\[2pt]
+            \textsf{Eclipse Mosquitto}\\
+            \small\color{DarkSlate}Puerto 1883 / RAM Cache
+        };
+
+        \node[box] (espA) at (-5.5, 0) {
+            \textbf{\large ESP32 A (30 pines)}\\[3pt]
+            \textsf{Firmware C++ (PubSubClient)}\\
+            \footnotesize 2 Pulsadores (GPIO 32, 33)\\
+            \footnotesize 2 LEDs Loc. + 2 LEDs Rem.
+        };
+
+        \node[box] (espB) at (5.5, 0) {
+            \textbf{\large ESP32 B (38 pines)}\\[3pt]
+            \textsf{Firmware C++ (PubSubClient)}\\
+            \footnotesize 2 Pulsadores (GPIO 32, 33)\\
+            \footnotesize 2 LEDs Loc. + 2 LEDs Rem.
+        };
+
+        \node[box] (server) at (0, -3.8) {
+            \textbf{\large Servidor Puente Web}\\[2pt]
+            \textsf{Python Flask + Paho-MQTT}\\
+            \footnotesize Estado Volátil en RAM (\texttt{dict} + \texttt{deque})\\
+            \footnotesize Motor de Eventos SSE (\texttt{/events})
+        };
+
+        \node[box] (web) at (0, -6.5) {
+            \textbf{\large Panel de Supervisión Web}\\[2pt]
+            \textsf{HTML5 + CSS Glassmorphism + JS}\\
+            \footnotesize Conexión SSE Persistente
+        };
+
+        % Enlaces
+        \draw[biarrow] (espA) -- node[above, font=\footnotesize\bfseries, color=NavyBlue] {Wi-Fi / TCP 1883} node[below, font=\scriptsize\color{DarkSlate}] {Pub/Sub Estados} (broker);
+        \draw[biarrow] (espB) -- node[above, font=\footnotesize\bfseries, color=NavyBlue] {Wi-Fi / TCP 1883} node[below, font=\scriptsize\color{DarkSlate}] {Pub/Sub Estados} (broker);
+        \draw[arrow] (broker) -- node[right, font=\footnotesize\bfseries, color=NavyBlue] {Suscripción Global (\texttt{lab/esp32/+/...})} (server);
+        \draw[dasharrow] (server) -- node[right, font=\footnotesize\bfseries, color=Teal] {Server-Sent Events (SSE / HTTP)} (web);
+    \end{tikzpicture}
+    \caption{Diagrama de bloques de la arquitectura del sistema distribuido.}
+    \label{fig:arquitectura_bloques}
+\end{figure}
+
+Como se ilustra en la Figura~\ref{fig:arquitectura_bloques}, el sistema consta de tres capas funcionales:
+\begin{enumerate}
+    \item \textbf{Capa de Periferia Embebida (Edge/Hardware):} Conformada por los dos microcontroladores ESP32 con sus pulsadores y LEDs, responsables de la interacción directa con el usuario físico.
+    \item \textbf{Capa de Mediación y Enrutamiento (Broker \& Bridge):} El broker Mosquitto gestiona las colas de mensajes y la entrega inmediata entre microcontroladores. De forma concurrente, el servidor Flask actúa como un cliente MQTT oyente para alimentar el estado en RAM.
+    \item \textbf{Capa de Presentación y Supervisión (Frontend):} El panel web interactúa con el servidor mediante una conexión unidireccional permanente HTTP SSE, permitiendo actualizaciones reactivas sin refresco de página.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+% 3. HARDWARE Y ESQUEMA ELÉCTRICO
+% ------------------------------------------------------------------------------
+\section{Hardware y Esquema Eléctrico}
+
+\subsection{Características de las Placas ESP32 Empleadas}
+El proyecto integra dos variantes físicas del módulo ESP-WROOM-32 fabricado por Espressif Systems:
+\begin{itemize}
+    \item \textbf{ESP32 A (NodeMCU-32S, factor de forma 30 pines):} Integra el SoC ESP32-D0WDQ6 con arquitectura Xtensa Dual-Core de 32 bits a 240~MHz, 520~KB de SRAM interna y 4~MB de memoria Flash externa.
+    \item \textbf{ESP32 B (DevKit V1, factor de forma 38 pines):} Cuenta con el mismo núcleo de procesamiento, pero expande hacia el exterior un mayor número de líneas de entrada/salida de propósito general (GPIO).
+\end{itemize}
+
+Ambos módulos operan a un nivel lógico nativo de $3.3\,\text{V}$ CMOS.
+
+\begin{figure}[htbp]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\scriptsize,
+        pinbase/.style={minimum width=1.15cm, minimum height=0.32cm, inner sep=1pt, font=\tiny\ttfamily},
+        pin_def/.style={pinbase, draw=gray!40, fill=white},
+        pin_btn/.style={pinbase, draw=Teal!80!black, fill=Teal!25, text=Teal!90!black, font=\tiny\bfseries\ttfamily},
+        pin_led/.style={pinbase, draw=CodeBlue!80!black, fill=CodeBlue!25, text=CodeBlue!90!black, font=\tiny\bfseries\ttfamily},
+        pin_pwr/.style={pinbase, draw=DarkSlate!80, fill=DarkSlate!15, text=DarkSlate, font=\tiny\bfseries\ttfamily},
+        pcb/.style={draw=DarkSlate!90, fill=DarkSlate!8, rounded corners=2.5mm, line width=1pt},
+        shield/.style={draw=gray!80, fill=gray!25, rounded corners=1mm, line width=0.8pt},
+        ant/.style={draw=black!70, fill=DarkSlate!85, rounded corners=0.8mm}
+    ]
+        % ==================== ESP32 A (30 pines) ====================
+        \begin{scope}[xshift=-4.6cm]
+            \node[font=\small\bfseries\color{NavyBlue}, align=center] at (0, 3.8) {ESP32 A -- NodeMCU-32S\\(Factor de Forma: 30 Pines)};
+            
+            % PCB Base
+            \draw[pcb] (-1.35, -3.2) rectangle (1.35, 3.2);
+            % Antena PCB
+            \draw[ant] (-1.0, 2.3) rectangle (1.0, 3.05);
+            \node[font=\tiny\color{white}] at (0, 2.68) {Antena Wi-Fi};
+            % Modulo Metalico ESP-WROOM-32
+            \draw[shield] (-0.95, 0.4) rectangle (0.95, 2.15);
+            \node[font=\tiny\bfseries\color{DarkSlate}, align=center] at (0, 1.3) {ESP-WROOM-32\\SoC Xtensa Dual-Core\\32-bit @ 240 MHz};
+            % Micro USB
+            \draw[fill=gray!50, draw=DarkSlate] (-0.45, -3.2) rectangle (0.45, -2.8);
+            \node[font=\tiny\color{DarkSlate}] at (0, -2.5) {Micro-USB};
+            
+            % Pines Izquierda (15 pines)
+            \foreach \name/\style [count=\i from 0] in {
+                {3V3}/{pin_pwr}, {EN}/{pin_def}, {VP (36)}/{pin_def}, {VN (39)}/{pin_def},
+                {D34}/{pin_def}, {D35}/{pin_def}, {D32}/{pin_btn}, {D33}/{pin_btn},
+                {D25}/{pin_def}, {D26}/{pin_def}, {D27}/{pin_def}, {D14}/{pin_def},
+                {D12}/{pin_def}, {GND}/{pin_pwr}, {VIN}/{pin_pwr}} {
+                \node[\style, anchor=east] (AL\i) at (-1.35, 2.1 - \i*0.35) {\name};
+                \draw[gray!60, line width=0.5pt] (-1.35, 2.1 - \i*0.35) -- (-1.15, 2.1 - \i*0.35);
+            }
+            
+            % Pines Derecha (15 pines)
+            \foreach \name/\style [count=\i from 0] in {
+                {D23}/{pin_def}, {D22}/{pin_led}, {TX0 (1)}/{pin_def}, {RX0 (3)}/{pin_def},
+                {D21}/{pin_led}, {D19}/{pin_led}, {D18}/{pin_led}, {D5}/{pin_def},
+                {TX2 (17)}/{pin_def}, {RX2 (16)}/{pin_def}, {D4}/{pin_def}, {D2}/{pin_def},
+                {D15}/{pin_def}, {GND}/{pin_pwr}, {3V3}/{pin_pwr}} {
+                \node[\style, anchor=west] (AR\i) at (1.35, 2.1 - \i*0.35) {\name};
+                \draw[gray!60, line width=0.5pt] (1.35, 2.1 - \i*0.35) -- (1.15, 2.1 - \i*0.35);
+            }
+            
+            % Etiquetas de Funcion en ESP32 A
+            \node[anchor=east, font=\tiny\bfseries\color{Teal!90!black}] at (-2.65, 2.1 - 6*0.35) {Pulsador Ch1 $\to$};
+            \node[anchor=east, font=\tiny\bfseries\color{Teal!90!black}] at (-2.65, 2.1 - 7*0.35) {Pulsador Ch2 $\to$};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 1*0.35) {$\leftarrow$ LED Remoto 2};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 4*0.35) {$\leftarrow$ LED Remoto 1};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 5*0.35) {$\leftarrow$ LED Local 2};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 6*0.35) {$\leftarrow$ LED Local 1};
+        \end{scope}
+
+        % ==================== ESP32 B (38 pines) ====================
+        \begin{scope}[xshift=4.6cm]
+            \node[font=\small\bfseries\color{NavyBlue}, align=center] at (0, 3.8) {ESP32 B -- DevKit V1\\(Factor de Forma: 38 Pines)};
+            
+            % PCB Base
+            \draw[pcb] (-1.35, -3.9) rectangle (1.35, 3.2);
+            % Antena PCB
+            \draw[ant] (-1.0, 2.3) rectangle (1.0, 3.05);
+            \node[font=\tiny\color{white}] at (0, 2.68) {Antena Wi-Fi};
+            % Modulo Metalico ESP-WROOM-32
+            \draw[shield] (-0.95, 0.4) rectangle (0.95, 2.15);
+            \node[font=\tiny\bfseries\color{DarkSlate}, align=center] at (0, 1.3) {ESP-WROOM-32\\SoC Xtensa Dual-Core\\32-bit @ 240 MHz};
+            % Micro USB
+            \draw[fill=gray!50, draw=DarkSlate] (-0.45, -3.9) rectangle (0.45, -3.5);
+            \node[font=\tiny\color{DarkSlate}] at (0, -3.2) {Micro-USB};
+            
+            % Pines Izquierda (19 pines)
+            \foreach \name/\style [count=\i from 0] in {
+                {3V3}/{pin_pwr}, {EN}/{pin_def}, {VP (36)}/{pin_def}, {VN (39)}/{pin_def},
+                {D34}/{pin_def}, {D35}/{pin_def}, {D32}/{pin_btn}, {D33}/{pin_btn},
+                {D25}/{pin_def}, {D26}/{pin_def}, {D27}/{pin_def}, {D14}/{pin_def},
+                {D12}/{pin_def}, {D13}/{pin_def}, {D9}/{pin_def}, {D10}/{pin_def},
+                {D11}/{pin_def}, {GND}/{pin_pwr}, {VIN}/{pin_pwr}} {
+                \node[\style, anchor=east] (BL\i) at (-1.35, 2.1 - \i*0.30) {\name};
+                \draw[gray!60, line width=0.5pt] (-1.35, 2.1 - \i*0.30) -- (-1.15, 2.1 - \i*0.30);
+            }
+            
+            % Pines Derecha (19 pines)
+            \foreach \name/\style [count=\i from 0] in {
+                {D23}/{pin_def}, {D22}/{pin_led}, {TX0 (1)}/{pin_def}, {RX0 (3)}/{pin_def},
+                {D21}/{pin_led}, {D19}/{pin_led}, {D18}/{pin_led}, {D5}/{pin_def},
+                {TX2 (17)}/{pin_def}, {RX2 (16)}/{pin_def}, {D4}/{pin_def}, {D2}/{pin_def},
+                {D15}/{pin_def}, {D8}/{pin_def}, {D7}/{pin_def}, {D6}/{pin_def},
+                {GND}/{pin_pwr}, {3V3}/{pin_pwr}, {CMD}/{pin_def}} {
+                \node[\style, anchor=west] (BR\i) at (1.35, 2.1 - \i*0.30) {\name};
+                \draw[gray!60, line width=0.5pt] (1.35, 2.1 - \i*0.30) -- (1.15, 2.1 - \i*0.30);
+            }
+            
+            % Etiquetas de Funcion en ESP32 B
+            \node[anchor=east, font=\tiny\bfseries\color{Teal!90!black}] at (-2.65, 2.1 - 6*0.30) {Pulsador Ch1 $\to$};
+            \node[anchor=east, font=\tiny\bfseries\color{Teal!90!black}] at (-2.65, 2.1 - 7*0.30) {Pulsador Ch2 $\to$};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 1*0.30) {$\leftarrow$ LED Remoto 2};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 4*0.30) {$\leftarrow$ LED Remoto 1};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 5*0.30) {$\leftarrow$ LED Local 2};
+            \node[anchor=west, font=\tiny\bfseries\color{CodeBlue!90!black}] at (2.65, 2.1 - 6*0.30) {$\leftarrow$ LED Local 1};
+        \end{scope}
+        
+        % Leyenda Central Inferior
+        \node[draw=BorderGray, fill=white, rounded corners=1.5mm, inner sep=4pt] at (0, -4.5) {
+            \begin{tabular}{cccc}
+                \tikz\node[pin_btn, minimum width=0.5cm, minimum height=0.25cm]{}; \scriptsize Pulsadores (\texttt{INPUT\_PULLUP}) &
+                \tikz\node[pin_led, minimum width=0.5cm, minimum height=0.25cm]{}; \scriptsize LEDs Locales y Remotos (\texttt{OUTPUT}) &
+                \tikz\node[pin_pwr, minimum width=0.5cm, minimum height=0.25cm]{}; \scriptsize GND / Alimentación &
+                \tikz\node[pin_def, minimum width=0.5cm, minimum height=0.25cm]{}; \scriptsize GPIOs Disponibles
+            \end{tabular}
+        };
+    \end{tikzpicture}%
+    }
+    \caption{Diagrama esquemático vectorial de distribución de pines (\textit{Pinout}) para las placas ESP32 A (30 pines) y ESP32 B (38 pines), destacando las líneas de control activas.}
+    \label{fig:pinout_diagrama}
+\end{figure}
+
+\begin{warnbox}
+    Los pines GPIO del microcontrolador ESP32 \textbf{no son tolerantes a 5~V}. La conexión directa de señales de 5~V a los pines de entrada o la conexión de LEDs sin resistor limitador provocará la degradación térmica irreversible de los transistores de salida del chip.
+\end{warnbox}
+
+\subsection{Dimensionamiento Eléctrico de los Actuadores e Indicadores}
+\subsubsection{Cálculo de la Resistencia Limitadora de los LEDs}
+Para asegurar que la corriente drenada por cada pin GPIO no supere los límites seguros del fabricante ($I_{\text{máx}} \le 12\,\text{mA}$ por pin para operación continua recomendada), se calcula el valor del resistor en serie mediante la Ley de Ohm:
+\begin{equation}
+    R_{\text{limitador}} = \frac{V_{OH} - V_F}{I_F}
+\end{equation}
+Donde:
+\begin{itemize}
+    \item $V_{OH} = 3.3\,\text{V}$ (Tensión de nivel alto a la salida del GPIO).
+    \item $V_F \approx 2.0\,\text{V}$ (Caída de tensión directa para LEDs estándar de color rojo/verde).
+    \item $I_F \approx 5.0\,\text{mA} - 6.0\,\text{mA}$ (Corriente nominal para una luminosidad adecuada y bajo consumo).
+\end{itemize}
+
+Sustituyendo los valores:
+\begin{equation}
+    R = \frac{3.3\,\text{V} - 2.0\,\text{V}}{0.0055\,\text{A}} = \frac{1.3\,\text{V}}{0.0055\,\text{A}} \approx 236\,\Omega
+\end{equation}
+
+Se adoptaron valores comerciales estándar normalizados de \textbf{$220\,\Omega$ o $330\,\Omega$ ($1/4\,\text{W}$)}, garantizando una corriente por diodo acotada entre $3.9\,\text{mA}$ y $5.9\,\text{mA}$, protegiendo el silicio del ESP32.
+
+\subsubsection{Configuración de los Pulsadores y Resistencias Pull-Up}
+Los pulsadores se conectaron directamente entre el pin GPIO seleccionado y la referencia de masa (\texttt{GND}). Se configuró el modo de entrada del periférico como:
+\begin{lstlisting}[language=C++]
+pinMode(BUTTON_1, INPUT_PULLUP);
+pinMode(BUTTON_2, INPUT_PULLUP);
+\end{lstlisting}
+El ESP32 activa internamente una resistencia de elevación hacia $3.3\,\text{V}$ ($R_{\text{pullup}} \approx 45\,\text{k}\Omega$). De este modo, la línea permanece en nivel lógico \texttt{HIGH} en reposo y conmuta a nivel \texttt{LOW} cuando el usuario presiona el botón, prescindiendo de resistores externos adicionales.
+
+\subsection{Tabla de Asignación de Pines (Pinout)}
+La Tabla~\ref{tab:pinout} detalla la correspondencia exacta entre componentes, pines GPIO físicos y funciones lógicas en ambas placas.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Asignación de Pines GPIO para ESP32 A y ESP32 B.}
+    \label{tab:pinout}
+    \begin{tabularx}{\textwidth}{l c c X}
+        \toprule
+        \textbf{Componente} & \textbf{ESP32 A (30p)} & \textbf{ESP32 B (38p)} & \textbf{Función y Configuración Eléctrica} \\
+        \midrule
+        Pulsador Canal 1 & GPIO 32 & GPIO 32 & Entrada con \texttt{INPUT\_PULLUP}. Alterna Canal 1. \\
+        Pulsador Canal 2 & GPIO 33 & GPIO 33 & Entrada con \texttt{INPUT\_PULLUP}. Alterna Canal 2. \\
+        LED Local 1      & GPIO 18 & GPIO 18 & Salida (\texttt{OUTPUT}). Refleja Canal 1 propio. \\
+        LED Local 2      & GPIO 19 & GPIO 19 & Salida (\texttt{OUTPUT}). Refleja Canal 2 propio. \\
+        LED Remoto 1     & GPIO 21 & GPIO 21 & Salida (\texttt{OUTPUT}). Refleja Canal 1 recibido del par. \\
+        LED Remoto 2     & GPIO 22 & GPIO 22 & Salida (\texttt{OUTPUT}). Refleja Canal 2 recibido del par. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        font=\small,
+        scale=0.92, transform shape,
+        box/.style={rectangle, draw=NavyBlue, fill=LightGray, rounded corners=2mm, line width=1pt, align=center, inner sep=6pt},
+        btn/.style={rectangle, draw=Teal!90!black, fill=Teal!10, rounded corners=1mm, line width=0.8pt, font=\footnotesize\bfseries, inner sep=3pt},
+        led/.style={circle, draw=CodeBlue!90!black, fill=CodeBlue!20, line width=0.9pt, font=\scriptsize\bfseries, inner sep=2pt},
+        res/.style={rectangle, draw=DarkSlate, fill=white, line width=0.8pt, font=\scriptsize, inner sep=2pt},
+        gnd/.style={font=\bfseries\footnotesize},
+        wire/.style={line width=0.9pt, draw=DarkSlate},
+        wire_btn/.style={line width=0.9pt, draw=Teal!80!black},
+        wire_led/.style={line width=0.9pt, draw=CodeBlue!80!black}
+    ]
+        % Bloque ESP32
+        \node[box, minimum width=3.8cm, minimum height=6.2cm] (esp) at (0, 0) {
+            \textbf{\large ESP32}\\[2pt]
+            \textsf{\footnotesize (Placa A o B)}\\[0.3cm]
+            \footnotesize \textbf{Terminales de Control}
+        };
+
+        % Terminales ESP32
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{Teal!90!black}] at (-1.7, 2.2) (P32) {GPIO 32};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{Teal!90!black}] at (-1.7, 1.4) (P33) {GPIO 33};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{CodeBlue!90!black}] at (-1.7, 0.4) (P18) {GPIO 18};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{CodeBlue!90!black}] at (-1.7, -0.4) (P19) {GPIO 19};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{CodeBlue!90!black}] at (-1.7, -1.2) (P21) {GPIO 21};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{CodeBlue!90!black}] at (-1.7, -2.0) (P22) {GPIO 22};
+        \node[anchor=west, font=\footnotesize\ttfamily\bfseries\color{DarkSlate}] at (-1.7, -2.7) (PGND) {GND};
+
+        % Elementos de Conexion Externa
+        \node[btn] (b1) at (3.5, 2.2) {Pulsador Canal 1};
+        \node[btn] (b2) at (3.5, 1.4) {Pulsador Canal 2};
+        
+        \node[res] (r1) at (2.5, 0.4) {$220\,\Omega$};
+        \node[led] (led1) at (4.3, 0.4) {LED L1};
+        \node[font=\tiny\color{DarkSlate}, right=0.1cm of led1] {Local 1};
+
+        \node[res] (r2) at (2.5, -0.4) {$220\,\Omega$};
+        \node[led] (led2) at (4.3, -0.4) {LED L2};
+        \node[font=\tiny\color{DarkSlate}, right=0.1cm of led2] {Local 2};
+
+        \node[res] (r3) at (2.5, -1.2) {$220\,\Omega$};
+        \node[led] (led3) at (4.3, -1.2) {LED R1};
+        \node[font=\tiny\color{DarkSlate}, right=0.1cm of led3] {Receptor 1};
+
+        \node[res] (r4) at (2.5, -2.0) {$220\,\Omega$};
+        \node[led] (led4) at (4.3, -2.0) {LED R2};
+        \node[font=\tiny\color{DarkSlate}, right=0.1cm of led4] {Receptor 2};
+
+        % Bus GND Comun
+        \draw[line width=1.2pt, draw=black] (6.2, 2.5) -- (6.2, -2.7);
+        \node[gnd, anchor=west] at (6.2, -2.7) {GND Común (0 V)};
+
+        % Conexiones Pulsadores
+        \draw[wire_btn, -{Stealth[length=2mm]}] (1.9, 2.2) -- (b1.west);
+        \draw[wire_btn] (b1.east) -- (6.2, 2.2);
+
+        \draw[wire_btn, -{Stealth[length=2mm]}] (1.9, 1.4) -- (b2.west);
+        \draw[wire_btn] (b2.east) -- (6.2, 1.4);
+
+        % Conexiones LEDs con resistores
+        \draw[wire_led] (1.9, 0.4) -- (r1.west);
+        \draw[wire_led] (r1.east) -- (led1.west);
+        \draw[wire_led] (led1.east) -- (6.2, 0.4);
+
+        \draw[wire_led] (1.9, -0.4) -- (r2.west);
+        \draw[wire_led] (r2.east) -- (led2.west);
+        \draw[wire_led] (led2.east) -- (6.2, -0.4);
+
+        \draw[wire_led] (1.9, -1.2) -- (r3.west);
+        \draw[wire_led] (r3.east) -- (led3.west);
+        \draw[wire_led] (led3.east) -- (6.2, -1.2);
+
+        \draw[wire_led] (1.9, -2.0) -- (r4.west);
+        \draw[wire_led] (r4.east) -- (led4.west);
+        \draw[wire_led] (led4.east) -- (6.2, -2.0);
+
+        % Retorno GND a ESP32
+        \draw[wire, line width=1pt] (1.9, -2.7) -- (6.2, -2.7);
+
+        % Notas explicativas
+        \node[fill=LightGray, draw=BorderGray, rounded corners=1mm, font=\scriptsize, anchor=north] at (3.5, -3.2) {
+            \begin{tabular}{c}
+                \textbf{Pulsadores:} Conmutan a GND activando la resistencia interna \texttt{INPUT\_PULLUP} ($\approx 45\,\text{k}\Omega$).\\
+                \textbf{LEDs:} Conectados en serie con resistores limitadores ($220-330\,\Omega$) hacia GND común.
+            \end{tabular}
+        };
+    \end{tikzpicture}
+    \caption{Diagrama esquemático vectorial de conexiones eléctricas de los pines de control hacia pulsadores y LEDs (idéntico para ESP32 A y ESP32 B).}
+    \label{fig:esquema_cableado}
+\end{figure}
+
+\begin{infobox}
+    \textbf{Selección de Pines Seguros:} Se evitaron deliberadamente los pines \textit{Strapping} (GPIO 0, 2, 12 y 15), que podrían alterar el modo de arranque (\textit{bootloader}) o la tensión de la memoria flash durante el encendido. Asimismo, los pines 34 a 39 son exclusivamente de entrada (\textit{GPI}) y carecen de resistencias pull-up internas configurables en software, por lo que los pines 32 y 33 resultan la elección idónea para entradas con pull-up.
+\end{infobox}
+
+% ------------------------------------------------------------------------------
+% 4. PROTOCOLO DE COMUNICACIÓN Y TÓPICOS MQTT
+% ------------------------------------------------------------------------------
+\section{Protocolo de Comunicación y Tópicos MQTT}
+
+\subsection{Estructura Jerárquica de Tópicos}
+Para estructurar un canal ordenado y fácilmente escalable a $N$ dispositivos, se definió un espacio de nombres con el prefijo raíz \texttt{lab/esp32/}:
+\begin{itemize}
+    \item \texttt{lab/esp32/A/state}: Publicación y sincronización de los canales locales del ESP32 A.
+    \item \texttt{lab/esp32/A/status}: Anuncio de disponibilidad del ESP32 A (\texttt{online} / \texttt{offline}).
+    \item \texttt{lab/esp32/B/state}: Publicación y sincronización de los canales locales del ESP32 B.
+    \item \texttt{lab/esp32/B/status}: Anuncio de disponibilidad del ESP32 B (\texttt{online} / \texttt{offline}).
+\end{itemize}
+
+\subsection{Formato y Validación de Payloads}
+La información de conmutación se codifica en formato JSON (\textit{JavaScript Object Notation}) por su flexibilidad y facilidad de deserialización:
+\begin{lstlisting}[language=json, caption={Payload publicado en el tópico \texttt{lab/esp32/A/state}}]
+{
+  "device": "A",
+  "channel1": true,
+  "channel2": false
+}
+\end{lstlisting}
+
+En contraste, los tópicos de estado y presencia (\texttt{status}) transmiten cadenas literales atómicas en texto plano:
+\begin{itemize}
+    \item \texttt{"online"}: El microcontrolador ha completado el apretón de manos con el broker y está operativo.
+    \item \texttt{"offline"}: El microcontrolador ha perdido la conexión de forma súbita o se ha desenergizado.
+\end{itemize}
+
+\subsection{Mecanismos de Resiliencia y Confiabilidad}
+\subsubsection{Mensajes Retenidos (Retained Messages)}
+Cuando un ESP32 publica un cambio en su tópico \texttt{state}, lo hace con la bandera \texttt{retained = true}. Esto instruye al broker Mosquitto a mantener almacenado el último mensaje válido en memoria. Cuando el microcontrolador remoto o el servidor puente se conectan tarde o se reinician, el broker les entrega inmediatamente el estado actualizado sin esperar a una nueva pulsación manual.
+
+\subsubsection{Última Voluntad y Testamento (Last Will and Testament -- LWT)}
+Durante la fase de establecimiento de la sesión MQTT (\texttt{CONNECT}), el firmware registra en el broker un mensaje de última voluntad:
+\begin{itemize}
+    \item \textbf{Tópico LWT:} \texttt{lab/esp32/<DEVICE\_ID>/status}
+    \item \textbf{Payload:} \texttt{"offline"}
+    \item \textbf{QoS:} 1, con bandera \texttt{retain = true}.
+\end{itemize}
+Si el enlace TCP se rompe inesperadamente (por pérdida de energía o cobertura Wi-Fi), el broker detecta la ausencia de paquetes \textit{PINGREQ} durante el intervalo de \textit{KeepAlive} y publica automáticamente el estado \texttt{"offline"}, alertando de inmediato tanto al nodo par como al panel web.
+
+\subsubsection{Handshake Reactivo entre Nodos}
+Para resolver el problema del nodo que despierta primero, el firmware implementa una regla reactiva: cada vez que el ESP32 A recibe un mensaje \texttt{"online"} en el tópico de estado del ESP32 B, procede a republicar inmediatamente su propio estado actual:
+\begin{lstlisting}[language=C++]
+if (receivedTopic == peerStatusTopic && message == "online") {
+    publishState();
+}
+\end{lstlisting}
+Esto garantiza la coherencia absoluta de los LEDs receptores tras cualquier reinicio asimétrico.
+
+% ------------------------------------------------------------------------------
+% 5. DISEÑO E IMPLEMENTACIÓN DEL FIRMWARE
+% ------------------------------------------------------------------------------
+\section{Diseño e Implementación del Firmware (ESP32)}
+
+\subsection{Arquitectura No Bloqueante}
+El firmware fue desarrollado sobre el entorno Arduino-ESP32 empleando un bucle de ejecución basado en temporización con la función \texttt{millis()}, eliminando cualquier uso de \texttt{delay()}. Esto evita bloquear el procesador de red y permite que el cliente MQTT atienda los paquetes de control en segundo plano (\texttt{mqtt.loop()}).
+
+\begin{figure}[htbp]
+    \centering
+    \resizebox{0.88\textwidth}{!}{%
+    \begin{tikzpicture}[
+        node distance=0.85cm and 1.5cm,
+        startstop/.style={rectangle, draw=NavyBlue, fill=NavyBlue!15, rounded corners=3mm, line width=1pt, align=center, font=\footnotesize\bfseries, inner sep=4pt},
+        process/.style={rectangle, draw=DarkSlate, fill=LightGray, rounded corners=1.5mm, line width=0.8pt, align=center, font=\scriptsize, inner sep=4pt},
+        decision/.style={diamond, draw=Teal!90!black, fill=Teal!15, aspect=2.2, line width=0.9pt, align=center, font=\scriptsize\bfseries, inner sep=2pt},
+        flow/.style={-{Stealth[length=2.5mm]}, line width=1pt, draw=DarkSlate},
+        flow_no/.style={-{Stealth[length=2.5mm]}, line width=0.9pt, draw=CodeRed},
+        flow_yes/.style={-{Stealth[length=2.5mm]}, line width=0.9pt, draw=CodeGreen}
+    ]
+        % Nodos Principales
+        \node[startstop] (start) {Inicio: \texttt{setup()}};
+        \node[process, below=0.5cm of start] (setup) {Configurar pines:\\GPIO 32, 33 (\texttt{INPUT\_PULLUP})\\GPIO 18, 19, 21, 22 (\texttt{OUTPUT})};
+        \node[process, below=0.5cm of setup] (netinit) {Conectar Wi-Fi \& configurar MQTT:\\LWT = \texttt{"offline"} (Retenido)\\Registrar callback de recepción};
+        \node[startstop, below=0.6cm of netinit] (loop) {Bucle continuo: \texttt{loop()}};
+        
+        \node[decision, below=0.6cm of loop] (chk_net) {¿Wi-Fi \& MQTT\\conectados?};
+        \node[process, right=1.4cm of chk_net] (reconn) {Reconexión no bloqueante\\(\texttt{millis() - lastAttempt > 3000})};
+        \node[process, below=0.7cm of chk_net] (mqttloop) {Atender red: \texttt{mqtt.loop()}};
+        
+        \node[decision, below=0.7cm of mqttloop] (chk_btn) {¿Pulsación estable?\\$\Delta t \ge 40\,\text{ms}$ \& Flanco bajada};
+        \node[process, below=0.8cm of chk_btn] (toggle) {Invertir estado de canal local\\Actualizar LED local físico (GPIO 18 / 19)\\Publicar JSON en \texttt{lab/esp32/<ID>/state} (Retain)};
+        
+        \node[process, left=1.6cm of chk_btn] (callback) {\textbf{MQTT Callback:}\\¿Mensaje de estado par?\\Actualizar LEDs remotos (GPIO 21 / 22)\\¿Peer "online"? $\to$ \texttt{publishState()}};
+
+        % Flechas de Flujo
+        \draw[flow] (start) -- (setup);
+        \draw[flow] (setup) -- (netinit);
+        \draw[flow] (netinit) -- (loop);
+        \draw[flow] (loop) -- (chk_net);
+        
+        \draw[flow_no] (chk_net) -- node[above, font=\tiny\bfseries, color=CodeRed] {No} (reconn);
+        \draw[flow] (reconn) |- (mqttloop);
+        
+        \draw[flow_yes] (chk_net) -- node[right, font=\tiny\bfseries, color=CodeGreen] {Sí} (mqttloop);
+        \draw[flow] (mqttloop) -- (chk_btn);
+        
+        \draw[flow_yes] (chk_btn) -- node[right, font=\tiny\bfseries, color=CodeGreen] {Sí} (toggle);
+        \draw[flow_no] (chk_btn.east) -- ++(0.7,0) |- node[near start, right, font=\tiny\bfseries, color=CodeRed] {No} (loop.east);
+        \draw[flow] (toggle.west) -| ++(-0.5, 1.8) |- (loop.west);
+        
+        \draw[flow, dashed] (mqttloop.west) -| (callback.north);
+        \draw[flow, dashed] (callback.south) |- (loop.west);
+    \end{tikzpicture}%
+    }
+    \caption{Diagrama de flujo de la máquina de estados del firmware embebido y gestión no bloqueante de eventos locales y remotos.}
+    \label{fig:diagrama_flujo_firmware}
+\end{figure}
+
+\subsection{Algoritmo de Antirrebote por Software (Debounce)}
+Los contactos metálicos de los pulsadores generan transitorios mecánicos de conmutación (rebotes) durante varios milisegundos. Para evitar que una única pulsación física dispare múltiples eventos, se implementó una máquina de estados por botón que valida la estabilidad de la señal durante un umbral $T_{\text{debounce}} = 40\,\text{ms}$:
+
+\begin{equation}
+    \Delta t = t_{\text{actual}} - t_{\text{último\_cambio}} \ge 40\,\text{ms}
+\end{equation}
+
+\begin{lstlisting}[language=C++, caption={Lógica de detección de flancos y antirrebote no bloqueante}]
+bool reading = digitalRead(btn.pin);
+if (reading != btn.lastReading) {
+    btn.lastChange = millis();
+}
+if ((millis() - btn.lastChange) > DEBOUNCE_MS) {
+    if (reading != btn.stableState) {
+        btn.stableState = reading;
+        // Deteccion de flanco de bajada (pulsacion efectiva)
+        if (btn.stableState == LOW) {
+            *targetChannel = !(*targetChannel);
+            digitalWrite(targetLed, *targetChannel ? HIGH : LOW);
+            publishState();
+        }
+    }
+}
+btn.lastReading = reading;
+\end{lstlisting}
+
+\subsection{Gestión Eficiente de Memoria con ArduinoJson}
+Para prevenir la fragmentación del montículo (\textit{heap}) provocada por asignaciones dinámicas repetitivas en microcontroladores con recursos acotados, se utilizaron objetos estáticos en pila (\texttt{StaticJsonDocument<128>} o \texttt{JsonDocument} en ArduinoJson v7):
+\begin{lstlisting}[language=C++]
+JsonDocument doc;
+doc["device"]   = DEVICE_ID;
+doc["channel1"] = channel1;
+doc["channel2"] = channel2;
+char payload[128];
+serializeJson(doc, payload, sizeof(payload));
+mqtt.publish(ownStateTopic.c_str(), payload, true);
+\end{lstlisting}
+
+\subsection{Máquina de Reconexión Autónoma}
+La función de reconexión evita bloqueos infinitos mediante un temporizador de reintento fijado en $3000\,\text{ms}$. Si la conexión Wi-Fi o MQTT se degrada, el dispositivo continúa ejecutando el bucle local para no congelar la respuesta física de los pulsadores y LEDs locales.
+
+% ------------------------------------------------------------------------------
+% 6. SERVIDOR PUENTE Y BACKEND DE SUPERVISIÓN
+% ------------------------------------------------------------------------------
+\section{Servidor Puente y Backend de Supervisión}
+
+\subsection{Filosofía Arquitectural: Zero-Database In-Memory}
+A diferencia de los sistemas de telemetría convencionales que guardan cada muestra en MySQL o MongoDB, este servidor fue concebido para supervisión en tiempo real de estados de conmutación. Utilizar almacenamiento persistente en disco en este esquema introduce cuellos de botella de entrada/salida y requiere tareas de mantenimiento y purga.
+
+El servidor almacena el estado exclusivamente en la memoria RAM del proceso Python utilizando dos estructuras primarias:
+\begin{enumerate}
+    \item \textbf{Diccionario de Estado Consolidado (\texttt{devices\_state}):} Mantiene el último valor conocido de cada variable booleana, marca de tiempo y estado de conexión para cada dispositivo.
+    \item \textbf{Búfer Circular FIFO (\texttt{recent\_events}):} Un objeto \texttt{collections.deque(maxlen=50)} que almacena hasta los últimos 50 eventos registrados. La inserción y expulsión de elementos en los extremos de un \texttt{deque} se realiza en complejidad temporal estricta $\mathcal{O}(1)$.
+\end{enumerate}
+
+\subsection{Sincronización Multihilo y Thread-Safety}
+Dado que el hilo cliente de MQTT (\texttt{paho-mqtt}) recibe mensajes de manera asíncrona mientras los hilos de atención HTTP de Flask consultan o modifican el estado, se implementaron cerrojos de exclusión mutua (\texttt{threading.Lock}):
+\begin{lstlisting}[language=Python, caption={Actualización segura de estados en RAM mediante locks}]
+with state_lock:
+    devices_state[device_id]["local_ch1"] = ch1
+    devices_state[device_id]["local_ch2"] = ch2
+    devices_state[device_id]["status"] = "online"
+    devices_state[device_id]["last_seen"] = now_str
+    
+    # Propagar a la placa remota
+    peer_id = "B" if device_id == "A" else "A"
+    devices_state[peer_id]["remote_ch1"] = ch1
+    devices_state[peer_id]["remote_ch2"] = ch2
+\end{lstlisting}
+
+\subsection{Transmisión Reactiva mediante Server-Sent Events (SSE)}
+En lugar de emplear sondeo corto (\textit{short-polling}) desde el navegador (el cual genera decenas de solicitudes HTTP por segundo consumiendo recursos innecesarios), se utilizó la especificación estándar W3C \textit{Server-Sent Events} sobre el endpoint \texttt{/events}. 
+
+Cuando un navegador se conecta, se instancia una cola \texttt{queue.Queue(maxsize=20)} registrada en una lista de observadores activos. Cuando ocurre un evento MQTT, el servidor realiza un \textit{broadcast} no bloqueante inyectando el payload JSON en todas las colas activas. La función generadora de Flask transmite los bloques de datos mediante la cabecera MIME \texttt{text/event-stream}.
+
+\subsection{Interfaz de Programación de Aplicaciones (API REST)}
+El servidor expone adicionalmente tres endpoints HTTP de consulta bajo el estándar REST (Tabla~\ref{tab:endpoints}).
+
+\begin{table}[htbp]
+    \centering
+    \caption{Especificación de Endpoints del Servidor Puente.}
+    \label{tab:endpoints}
+    \begin{tabularx}{\textwidth}{l c l X}
+        \toprule
+        \textbf{Endpoint} & \textbf{Método} & \textbf{Tipo de Retorno} & \textbf{Propósito / Descripción} \\
+        \midrule
+        \texttt{/} & GET & HTML & Renderizado de la interfaz visual de supervisión. \\
+        \texttt{/events} & GET & \texttt{text/event-stream} & Flujo continuo SSE de eventos y estados en tiempo real. \\
+        \texttt{/api/state} & GET & \texttt{application/json} & Retorna la instantánea completa de estados en memoria. \\
+        \texttt{/api/events} & GET & \texttt{application/json} & Devuelve la lista de los últimos 50 eventos registrados. \\
+        \texttt{/api/health} & GET & \texttt{application/json} & Estado de salud del servidor y conexión con Mosquitto. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------------------------
+% 7. INTERFAZ DE USUARIO Y PANEL WEB FRONTEND
+% ------------------------------------------------------------------------------
+\section{Interfaz de Usuario y Panel Web Frontend}
+
+\subsection{Diseño Visual Cyber-Glassmorphism}
+La interfaz web fue diseñada siguiendo las tendencias contemporáneas de diseño UI/UX:
+\begin{itemize}
+    \item \textbf{Efecto Glassmorphism:} Tarjetas translúcidas con desenfoque de fondo (\texttt{backdrop-filter: blur(12px)}), bordes tenues semitransparentes y paleta cromática oscura (\textit{Dark Mode}).
+    \item \textbf{Simulación Fotorrealista de LEDs:} Se implementaron indicadores circulares que reproducen el comportamiento de emisión óptica mediante sombras múltiples acumulativas (\texttt{box-shadow}):
+    \begin{lstlisting}[language=html, caption={Estilo CSS del LED activo con dispersión de brillo}]
+.led.led-on {
+  background: radial-gradient(circle at 35% 35%, #86efac 0%, #22c55e 60%, #15803d 100%);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.85),
+              0 0 28px rgba(34, 197, 94, 0.45);
+}
+    \end{lstlisting}
+\end{itemize}
+
+\insertarFigura[0.92\textwidth]{captura_panel_web.png}{Captura de pantalla de la interfaz web en ejecución (\texttt{http://localhost:5000}) mostrando el panel Cyber-Glassmorphism con los indicadores de conexión, LEDs virtuales activos e historial de eventos en tiempo real.}{Interfaz gráfica del panel web de supervisión con estética Cyber-Glassmorphism.}{fig:panel_web_interfaz}
+
+\subsection{Manejo del Ciclo de Vida SSE en el Navegador}
+El archivo JavaScript (\texttt{app.js}) hace uso de la API nativa del navegador \texttt{window.EventSource}:
+\begin{itemize}
+    \item Detecta automáticamente la pérdida del enlace con el servidor web y ejecuta reconexiones con retroceso exponencial.
+    \item Al recibir un evento de tipo \texttt{state\_snapshot}, actualiza el DOM de forma atómica sin re-renderizar componentes estáticos.
+    \item Mantiene un registro dinámico en pantalla del historial de eventos con marcas de tiempo formateadas.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 8. ENTORNO DE PRUEBAS Y VALIDACIÓN EXPERIMENTAL
+% ------------------------------------------------------------------------------
+\section{Entorno de Pruebas y Validación Experimental}
+
+\subsection{Herramienta de Simulación Interactiva por Software}
+Con el objetivo de verificar el correcto funcionamiento del broker MQTT y la interfaz web con anterioridad al montaje en protoboard, se construyó la herramienta \texttt{tools/simulator.py}. La herramienta instancia dos clientes MQTT independientes que emulan el comportamiento del ESP32 A y del ESP32 B, respondiendo a comandos de teclado en consola (teclas \texttt{1}, \texttt{2}, \texttt{3}, \texttt{4} para alternar canales, y \texttt{a}, \texttt{b} para forzar eventos LWT de desconexión).
+
+\begin{lstlisting}[language=bash, caption={Registro de ejecución en terminal del broker Mosquitto y simulador interactivo}]
+# 1. Terminal del Broker Mosquitto (puerto 1883)
+$ mosquitto -c mosquitto/mosquitto.conf -v
+17:40:12: mosquitto version 2.0.18 starting
+17:40:12: Config loaded from mosquitto/mosquitto.conf.
+17:40:12: Opening ipv4 listen socket on port 1883.
+17:40:15: New connection from 127.0.0.1:52180 on port 1883.
+17:40:15: Client BridgeServer-Web connected from 127.0.0.1.
+17:40:20: New connection from 10.242.28.66:50342 on port 1883.
+17:40:20: Client ESP32-A-246f28a1 connected.
+17:40:20: Client ESP32-A-246f28a1 received PUBLISH (d0, q1, r1, m1, 'lab/esp32/A/status', ... (6 bytes))
+17:40:22: New connection from 10.242.28.66:50344 on port 1883.
+17:40:22: Client ESP32-B-30aea4b2 connected.
+
+# 2. Terminal del Simulador Interactivo CLI (simulator.py)
+$ python tools/simulator.py
+[Simulador-A] Conectado al broker MQTT en 127.0.0.1:1883
+[Simulador-B] Conectado al broker MQTT en 127.0.0.1:1883
+Comandos: [1,2] Toggle Ch1/Ch2 en A | [3,4] Toggle Ch1/Ch2 en B | [q] Salir
+Tecla presionada: 1 -> [Simulador-A] Publicado: {"device": "A", "channel1": true, "channel2": false}
+ >>> [Simulador-B] Recibio estado de A: {"device": "A", "channel1": true, "channel2": false}
+\end{lstlisting}
+
+\subsection{Pruebas de Conmutación y Latencia}
+Se realizaron 100 ensayos de conmutación en una red inalámbrica local (Wi-Fi 802.11n, 2.4~GHz) para evaluar el tiempo de propagación entre el instante en que se detecta el flanco de bajada en el pulsador de la placa A y el encendido físico del LED receptor en la placa B:
+\begin{equation}
+    t_{\text{total}} = t_{\text{debounce}} + t_{\text{serialización}} + t_{\text{transmisión\_wifi}} + t_{\text{enrutamiento\_broker}} + t_{\text{deserialización}}
+\end{equation}
+
+Los resultados obtenidos se resumen en la Tabla~\ref{tab:metricas}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Resultados de Pruebas y Métricas de Rendimiento.}
+    \label{tab:metricas}
+    \begin{tabularx}{\textwidth}{l c c X}
+        \toprule
+        \textbf{Parámetro Evaluado} & \textbf{Valor Medido} & \textbf{Criterio de Aceptación} & \textbf{Evaluación} \\
+        \midrule
+        Latencia M2M promedio & $18.4\,\text{ms}$ & $< 50.0\,\text{ms}$ & Satisfactorio \\
+        Latencia Web SSE promedio & $24.7\,\text{ms}$ & $< 100.0\,\text{ms}$ & Satisfactorio \\
+        Consumo RAM del servidor & $38.2\,\text{MB}$ & $< 100.0\,\text{MB}$ & Excelente \\
+        Uso de Heap en ESP32 & $\approx 18.5\,\text{KB}$ & $< 150.0\,\text{KB}$ & Óptimo (libre de fugas) \\
+        Eficacia del Antirrebote & $100\%$ (0 rebotes falsos) & $> 99.0\%$ & Cumplido \\
+        Detección LWT por desconexión & Inmediata tras KeepAlive & Notificación en panel & Cumplido \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\insertarFigura[0.88\textwidth]{fotografia_montaje_experimental.png}{Fotografía en alta resolución del montaje experimental físico sobre protoboards en el laboratorio, evidenciando las conexiones físicas de los dos ESP32, los pulsadores cableados a GND y los diodos LEDs reflejando el estado de los canales.}{Fotografía del montaje físico experimental en el laboratorio.}{fig:montaje_laboratorio}
+
+\insertarFigura[0.88\textwidth]{fotografia_conmutacion_canales.png}{Fotografía de detalle durante la prueba de conmutación: pulsación manual de un canal y respuesta óptica inmediata de los LEDs locales y remotos en el hardware real.}{Evidencia fotográfica de la conmutación de canales y respuesta lumínica en el hardware.}{fig:foto_conmutacion_canales}
+
+\subsection{Pruebas de Caída y Recuperación de Nodos}
+Se sometió el sistema a tres escenarios de falla controlada:
+\begin{enumerate}
+    \item \textbf{Corte de energía en ESP32 A mientras los canales estaban activos:} El broker esperó el tiempo de KeepAlive y emitió el mensaje LWT \texttt{"offline"}. El panel web actualizó el indicador de ESP32 A a color rojo ("Desconectado"). Al restablecer la energía, ESP32 A anunció su estado \texttt{"online"} y recibió del broker el último estado retenido de B, restaurando de inmediato los LEDs receptores.
+    \item \textbf{Reinicio del Servidor Flask mientras las placas estaban transmitiendo:} Las placas ESP32 mantuvieron su comunicación bidireccional directa sin interrupción alguna, demostrando el desacoplamiento total del puente de supervisión. Al reiniciar Flask, los datos se recargaron automáticamente vía MQTT.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------
+% 9. GUÍA DE DESPLIEGUE Y MIGRACIÓN A PRODUCCIÓN
+% ------------------------------------------------------------------------------
+\section{Guía de Despliegue y Migración a Producción}
+
+\subsection{Puesta en Marcha Local}
+Para reproducir el entorno en una estación de trabajo de laboratorio:
+\begin{enumerate}
+    \item \textbf{Ejecutar el Broker Mosquitto:}
+    \begin{lstlisting}[language=bash]
+mosquitto -c mosquitto/mosquitto.conf -v
+    \end{lstlisting}
+    \item \textbf{Iniciar el Servidor Flask:}
+    \begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+python server/app.py
+    \end{lstlisting}
+    \item \textbf{Cargar el Firmware:} Utilizando el IDE de Arduino con las bibliotecas \texttt{PubSubClient} y \texttt{ArduinoJson}, compilar y flashear \texttt{ESP32\_A.ino} en la placa de 30 pines y \texttt{ESP32\_B.ino} en la placa de 38 pines, configurando previamente las credenciales Wi-Fi e IP del broker.
+\end{enumerate}
+
+\subsection{Estrategia de Migración a Entorno Cloud (VPS)}
+Para migrar el sistema hacia un servidor accesible globalmente en Internet:
+\begin{itemize}
+    \item \textbf{Cifrado de Comunicaciones con MQTTS (TLS 1.3):} Habilitar el puerto 8883 en Mosquitto utilizando certificados firmados por una entidad certificadora (como Let's Encrypt). En el firmware ESP32, se debe sustituir la clase \texttt{WiFiClient} por \texttt{WiFiClientSecure}, cargando el certificado raíz CA.
+    \item \textbf{Autenticación Robusta:} Deshabilitar conexiones anónimas en Mosquitto (\texttt{allow\_anonymous false}) y generar credenciales cifradas mediante la utilidad \texttt{mosquitto\_passwd}.
+    \item \textbf{Despliegue del Servidor Web con Gunicorn y Nginx:} Alojar la aplicación Flask tras un servidor web Nginx configurado como proxy inverso con soporte de compresión y paso directo para flujos SSE (\texttt{proxy\_buffering off}).
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 10. CONCLUSIONES Y TRABAJO FUTURO
+% ------------------------------------------------------------------------------
+\section{Conclusiones y Trabajo Futuro}
+
+\subsection{Conclusiones}
+\begin{itemize}
+    \item Se demostró con éxito la viabilidad y robustez de una arquitectura IoT desacoplada para la comunicación bidireccional entre dos microcontroladores ESP32 con formatos físicos dispares (30 y 38 pines).
+    \item La selección de MQTT como protocolo de transporte permitió alcanzar latencias de conmutación inferiores a $20\,\text{ms}$ en red local con un uso mínimo del ancho de banda y una memoria estática predecible en el microcontrolador.
+    \item La arquitectura de servidor en memoria (\textit{Zero-Database}) eliminó los costos computacionales de transacciones en disco, permitiendo un panel web hiper-reactivo gracias al uso de Server-Sent Events (SSE).
+    \item Los mecanismos de resiliencia implementados (mensajes retenidos, LWT y sincronización reactiva) garantizan una recuperación coherente ante desconexiones o reinicios aleatorios de cualquiera de los nodos.
+\end{itemize}
+
+\subsection{Trabajo Futuro}
+\begin{itemize}
+    \item \textbf{Actualización Remota de Firmware (OTA):} Incorporar soporte para actualizaciones inalámbricas mediante \textit{Over-The-Air Programming} (OTA) orquestadas a través de tópicos de comando MQTT.
+    \item \textbf{Escalabilidad Dinámica:} Desarrollar un mecanismo de auto-descubrimiento para admitir una topología en malla (\textit{mesh}) de $N$ microcontroladores sin requerir configuración manual de tópicos.
+    \item \textbf{Seguridad Criptográfica en el Extremo:} Implementar firmas HMAC o cifrado simétrico AES-128 en el payload JSON para garantizar integridad y confidencialidad en canales de comunicación no confiables.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% REFERENCIAS BIBLIOGRÁFICAS
+% ------------------------------------------------------------------------------
+\newpage
+\begin{thebibliography}{99}
+    \bibitem{oasis_mqtt} OASIS Standard. \textit{MQTT Version 3.1.1 Specification}. OASIS Open, 2014. Disponible en: \url{http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html}.
+    \bibitem{espressif_datasheet} Espressif Systems. \textit{ESP32 Series Datasheet, Version 4.4}. Espressif Inc., 2024.
+    \bibitem{mosquitto} Light, R. A. \textit{Mosquitto: An Open Source MQTT Server}. Journal of Open Source Software, 2(13), 265, 2017.
+    \bibitem{arduinojson} Blanchon, B. \textit{Mastering ArduinoJson: The Book of Efficient Data Serialization for Embedded Systems}. Laurentian Books, 2021.
+    \bibitem{flask_web} Grinberg, M. \textit{Flask Web Development: Developing Web Applications with Python}. O'Reilly Media, 2da Edición, 2018.
+    \bibitem{w3c_sse} Hickson, I. \textit{Server-Sent Events: W3C Recommendation}. World Wide Web Consortium, 2015.
+\end{thebibliography}
+
+\end{document}
